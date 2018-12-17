@@ -5,11 +5,10 @@ public class Launcher {
 
     public static void main(String[] args)  {
 
-        DBEngine app = new DBEngine();
 
         try {
 
-
+            /*
             app.normalDbUsage();
             app.initDB();
 
@@ -26,6 +25,7 @@ public class Launcher {
             app.addNode(region,null,null,statusCode,statusDesc,configParams);
             app.addNode(region,agent,null,statusCode,statusDesc,configParams);
             app.addNode(region,agent,plugin,statusCode,statusDesc,configParams);
+            */
 
 
             while (true) {
@@ -40,7 +40,7 @@ public class Launcher {
                 //app.insertkey("region-" + UUID.randomUUID().toString(),"agent-" + UUID.randomUUID().toString(),"plugin-" + UUID.randomUUID().toString());
 
 
-                app.printnodes();
+                //app.printnodes();
 
 
                 Thread.sleep(1000);
