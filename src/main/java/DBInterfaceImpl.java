@@ -12,6 +12,8 @@ import java.util.concurrent.BlockingQueue;
 public class DBInterfaceImpl implements DBInterface {
 
 
+    private DBEngine dbe;
+
     private Gson gson;
     private Type type;
 
@@ -20,11 +22,93 @@ public class DBInterfaceImpl implements DBInterface {
 
     public DBInterfaceImpl() {
 
+        this.dbe = new DBEngine();
         this.gson = new Gson();
         this.type = new TypeToken<Map<String, List<Map<String, String>>>>() {
         }.getType();
 
+
     }
+
+
+    public Boolean addNode(MsgEvent de) {
+        Boolean wasAdded = false;
+
+        try {
+
+            System.out.println("Adding Node: " + de.getParams().toString());
+
+            String region = de.getParam("region_name");
+            String agent = de.getParam("agent_name");
+            String plugin = de.getParam("plugin_id");
+
+            if(region != null) {
+                if(!dbe.nodeExist(region,null,null)) {
+                    //fixme take into account current state
+                    //add region, this will need to be more complex in future
+                    dbe.addNode(region,null,null,"0","Region added by Agent",null);
+                }
+                if(agent != null) {
+                    if(!dbe.nodeExist(region,agent,null)) {
+                        //fixme take into account current state
+                        //add region, this will need to be more complex in future
+
+                        de.setParam("is_active",Boolean.TRUE.toString());
+                        de.setParam("watchdog_ts", String.valueOf(System.currentTimeMillis()));
+
+                        String platform = de.getParam("platform");
+                        String environment = de.getParam("environment");
+                        String location = de.getParam("location");
+                        String watchdogtimer = de.getParam("watchdogtimer");
+
+                        dbe.addNode(region,agent,null,"0","Agent added by Agent",null);
+                    }
+                }
+
+            }
+
+
+
+            //Is Agent
+            if((region != null) && (agent != null) && (plugin == null)) {
+                if (de.getParam("pluginconfigs") != null) {
+                    List<Map<String, String>> configMapList = new Gson().fromJson(de.getCompressedParam("pluginconfigs"),
+                            new TypeToken<List<Map<String, String>>>() {
+                            }.getType());
+
+                    for (Map<String, String> configMap : configMapList) {
+                        String pluginId = configMap.get("pluginid");
+                        //gdb.addNode(region, agent, pluginId);
+                        //gdb.setNodeParams(region, agent, pluginId, configMap);
+                        //{status_code=10, status_dest=Plugin Active, pluginid=plugin/0, isactive=true, configparams={"pluginname":"io.cresco.repo","jarfile":"repo-1.0-SNAPSHOT.jar"}}
+                        System.out.println("Adding Sub-Node: " + configMap.toString());
+
+                    }
+                }
+            }
+
+            wasAdded = true;
+
+        } catch (Exception ex) {
+            System.out.println("GraphDBUpdater : addNode ERROR : " + ex.toString());
+        }
+        return wasAdded;
+    }
+
+
+    public Map<String,NodeStatusType> getEdgeHealthStatus(String region, String agent, String plugin) {
+
+        Map<String,NodeStatusType> nodeStatusMap = null;
+        System.out.println("Map<String,NodeStatusType> getEdgeHealthStatus(String region, String agent, String plugin)");
+        return nodeStatusMap;
+    }
+
+    public Boolean watchDogUpdate(MsgEvent de) {
+        Boolean wasUpdated = false;
+        System.out.println("Boolean watchDogUpdate(MsgEvent de)");
+        return wasUpdated;
+    }
+
 
     public void shutdown() {
 
@@ -180,13 +264,6 @@ public class DBInterfaceImpl implements DBInterface {
         return resourceTotal;
     }
 
-    public Map<String,NodeStatusType> getEdgeHealthStatus(String region, String agent, String plugin) {
-
-        Map<String,NodeStatusType> nodeStatusMap = null;
-
-        return nodeStatusMap;
-    }
-
     public Map<String,NodeStatusType> getNodeStatus(String region, String agent, String plugin) {
 
         Map<String,NodeStatusType> nodeStatusMap = null;
@@ -194,18 +271,6 @@ public class DBInterfaceImpl implements DBInterface {
         return nodeStatusMap;
     }
 
-    public Boolean addNode(MsgEvent de) {
-        Boolean wasAdded = false;
-
-
-        return wasAdded;
-    }
-
-    public Boolean watchDogUpdate(MsgEvent de) {
-        Boolean wasUpdated = false;
-
-        return wasUpdated;
-    }
 
     public Boolean removeNode(MsgEvent de) {
         Boolean wasRemoved = false;
